@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -32,16 +33,27 @@ public class UserService implements IUserService {
 
     @Override
     public User findUserByUserName(String username) {
-        return null;
+        return userRepository.findByUsername(username);
     }
 
     @Override
     public Role findRoleByRoleName(String roleName) {
-        return null;
+
+        return roleRepository.findByRoleName(roleName);
     }
 
     @Override
     public void addRoleToUser(String username, String roleName) {
+        User user = this.findUserByUserName(username);
+        Role role = this.findRoleByRoleName(roleName);
+        if (user.getRoles() != null) user.getRoles().add(role);
+    }
 
+    @Override
+    public User authenticate(String username, String password) {
+        User user = this.findUserByUserName(username);
+        if (user == null) throw new RuntimeException("Bad credentials");
+        if (user.getPassword().equals(password)) return user;
+        throw new RuntimeException("Bad credentials");
     }
 }

@@ -1,11 +1,9 @@
 package ma.enset.hospital;
 
 import ma.enset.hospital.entities.*;
-import ma.enset.hospital.repository.ConsultationRepository;
-import ma.enset.hospital.repository.MedecinRepository;
-import ma.enset.hospital.repository.PatientRepository;
-import ma.enset.hospital.repository.RendezVousRepository;
+import ma.enset.hospital.repository.*;
 import ma.enset.hospital.services.IHospitalService;
+import ma.enset.hospital.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -34,44 +32,79 @@ public class HospitalApplication {
             IHospitalService hospitalService,
             PatientRepository patientRepository,
             MedecinRepository medecinRepository,
-            RendezVousRepository rendezVousRepository
+            RendezVousRepository rendezVousRepository,
+            UserService userService
     ) {
         return args -> {
-            Stream.of("John Doe", "Mary Doe", "Sam Smith").forEach(name -> {
-                Patient patient = new Patient();
-                patient.setNom(name);
-                patient.setMalade(false);
-                patient.setScore((int) Math.floor(Math.random() * 100 + 1));
-                patient.setDateNaissanec(new Date());
-                hospitalService.savePatient(patient);
+            User u = new User();
+            u.setUsername("user1");
+            u.setPassword("123456");
+            userService.addUser(u);
+
+
+            User u2 = new User();
+            u2.setUsername("admin");
+            u2.setPassword("123456");
+            userService.addUser(u2);
+
+
+            Stream.of("STUDENT", "USER", "ADMIN").forEach(name -> {
+                Role role = new Role();
+                role.setRoleName(name);
+                userService.addRole(role);
             });
 
-            Stream.of("Edward Burnwood", "Eren Yeager").forEach(name -> {
-                Medecin medecin = new Medecin();
-                medecin.setNom(name);
-                medecin.setSpeciality(Math.random() > 0.5 ? "DENTAL" : "CARDIO");
-                medecin.setEmail(slugify(name) + "@gmail.com");
-                hospitalService.saveMedecin(medecin);
-            });
 
+            userService.addRoleToUser("user1", "STUDENT");
+            userService.addRoleToUser("user1", "USER");
+            userService.addRoleToUser("admin", "ADMIN");
+            userService.addRoleToUser("admin", "USER");
 
-            //  Get Patient
-            Patient patient = patientRepository.findById(2L).orElse(null);
-            Medecin medecin = medecinRepository.findById(1L).orElse(null);
+            try {
+                User user = userService.authenticate("user1", "123456");
+                System.out.println(user.getUserId());
+                System.out.println(user.getUsername());
+                System.out.println("Roles");
+                user.getRoles().forEach(System.out::println);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
-
-            RendezVous rendezVous = new RendezVous();
-            rendezVous.setDate(new Date());
-            rendezVous.setStatus(StatusRDV.PENDING);
-            rendezVous.setPatient(patient);
-            rendezVous.setMedecin(medecin);
-            hospitalService.saveRDV(rendezVous);
-            RendezVous rendezVous1 = rendezVousRepository.findById(1L).orElse(null);
-            Consultation consultation = new Consultation();
-            consultation.setDateConsultation(rendezVous1.getDate());
-            consultation.setRendezVous(rendezVous1);
-            consultation.setRapport("Rapport de la consultation");
-            hospitalService.saveConsultation(consultation);
+//            Stream.of("John Doe", "Mary Doe", "Sam Smith").forEach(name -> {
+//                Patient patient = new Patient();
+//                patient.setNom(name);
+//                patient.setMalade(false);
+//                patient.setScore((int) Math.floor(Math.random() * 100 + 1));
+//                patient.setDateNaissanec(new Date());
+//                hospitalService.savePatient(patient);
+//            });
+//
+//            Stream.of("Edward Burnwood", "Eren Yeager").forEach(name -> {
+//                Medecin medecin = new Medecin();
+//                medecin.setNom(name);
+//                medecin.setSpeciality(Math.random() > 0.5 ? "DENTAL" : "CARDIO");
+//                medecin.setEmail(slugify(name) + "@gmail.com");
+//                hospitalService.saveMedecin(medecin);
+//            });
+//
+//
+//            //  Get Patient
+//            Patient patient = patientRepository.findById(2L).orElse(null);
+//            Medecin medecin = medecinRepository.findById(1L).orElse(null);
+//
+//
+//            RendezVous rendezVous = new RendezVous();
+//            rendezVous.setDate(new Date());
+//            rendezVous.setStatus(StatusRDV.PENDING);
+//            rendezVous.setPatient(patient);
+//            rendezVous.setMedecin(medecin);
+//            hospitalService.saveRDV(rendezVous);
+//            RendezVous rendezVous1 = rendezVousRepository.findById(1L).orElse(null);
+//            Consultation consultation = new Consultation();
+//            consultation.setDateConsultation(rendezVous1.getDate());
+//            consultation.setRendezVous(rendezVous1);
+//            consultation.setRapport("Rapport de la consultation");
+//            hospitalService.saveConsultation(consultation);
         };
     }
 
